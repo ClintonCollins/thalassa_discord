@@ -2,9 +2,9 @@ package music
 
 import (
 	"fmt"
+	"github.com/ClintonCollins/thalassa_discord/pkg/discord"
 	"github.com/bwmarrin/discordgo"
 	"github.com/dustin/go-humanize/english"
-	"thalassa_discord/pkg/discord"
 	"time"
 )
 

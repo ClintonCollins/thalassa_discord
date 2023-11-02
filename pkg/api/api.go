@@ -9,17 +9,18 @@ import (
 	"sync"
 	"time"
 
-	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi"
 	"github.com/go-chi/cors"
 	"github.com/olahol/melody"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	thalassav1 "thalassa_discord/gen/go/thalassa/v1"
-	"thalassa_discord/gen/go/thalassa/v1/thalassav1connect"
-	"thalassa_discord/models"
-	"thalassa_discord/pkg/discord"
-	"thalassa_discord/pkg/music"
+	thalassav1 "github.com/ClintonCollins/thalassa_discord/gen/go/thalassa/v1"
+	"github.com/ClintonCollins/thalassa_discord/gen/go/thalassa/v1/thalassav1connect"
+
+	"github.com/ClintonCollins/thalassa_discord/models"
+	"github.com/ClintonCollins/thalassa_discord/pkg/discord"
+	"github.com/ClintonCollins/thalassa_discord/pkg/music"
 )
 
 type Instance struct {

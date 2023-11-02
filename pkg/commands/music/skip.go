@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"thalassa_discord/pkg/discord"
-	"thalassa_discord/pkg/music"
+	"github.com/ClintonCollins/thalassa_discord/pkg/discord"
+	"github.com/ClintonCollins/thalassa_discord/pkg/music"
 
 	"github.com/bwmarrin/discordgo"
 )

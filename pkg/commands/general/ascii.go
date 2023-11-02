@@ -10,7 +10,7 @@ import (
 	"log"
 	"net/url"
 
-	"thalassa_discord/pkg/discord"
+	"github.com/ClintonCollins/thalassa_discord/pkg/discord"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/h2non/filetype"

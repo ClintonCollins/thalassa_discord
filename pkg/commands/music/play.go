@@ -5,13 +5,14 @@ import (
 	"math"
 	"time"
 
-	"thalassa_discord/models"
-	"thalassa_discord/pkg/discord"
-	"thalassa_discord/pkg/music"
-	"thalassa_discord/pkg/utils"
+	"github.com/volatiletech/null/v8"
+
+	"github.com/ClintonCollins/thalassa_discord/models"
+	"github.com/ClintonCollins/thalassa_discord/pkg/discord"
+	"github.com/ClintonCollins/thalassa_discord/pkg/music"
+	"github.com/ClintonCollins/thalassa_discord/pkg/utils"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 )
 

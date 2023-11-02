@@ -15,6 +15,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/caarlos0/env/v10"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
@@ -23,23 +24,23 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/bwmarrin/discordgo"
 
-	"thalassa_discord/models"
-	"thalassa_discord/pkg/music"
+	"github.com/ClintonCollins/thalassa_discord/models"
+	"github.com/ClintonCollins/thalassa_discord/pkg/music"
 )
 
 type BotConfiguration struct {
-	BotToken     string
-	ClientID     string
-	ClientSecret string
-	DBName       string
-	DBUser       string
-	DBPassword   string
-	DBHost       string
-	DBPort       string
-	DBSSL        string
-	EnableAPI    bool
-	APIHost      string
-	APIPort      string
+	BotToken     string `env:"BOT_TOKEN,notEmpty"`
+	ClientID     string `env:"CLIENT_ID,notEmpty"`
+	ClientSecret string `env:"CLIENT_SECRET,notEmpty"`
+	DBName       string `env:"DB_NAME,notEmpty"`
+	DBUser       string `env:"DB_USER,notEmpty"`
+	DBPassword   string `env:"DB_PASSWORD,notEmpty"`
+	DBHost       string `env:"DB_HOST,notEmpty"`
+	DBPort       string `env:"DB_PORT,notEmpty"`
+	DBSSL        string `env:"DB_SSL" envDefault:"disable"`
+	EnableAPI    bool   `env:"ENABLE_API" envDefault:"false"`
+	APIHost      string `env:"API_HOST" envDefault:""`
+	APIPort      string `env:"API_PORT" envDefault:"6500"`
 }
 
 type handlers struct {
@@ -136,6 +137,7 @@ type ServerInstance struct {
 	Db                           *sql.DB
 	HttpClient                   *http.Client
 	CustomCommands               map[string]string
+	SongQueueStarted             bool
 	SongQueueUpdateCallback      func(guildID string, event music.SongQueueEvent)
 	SongQueueUpdateCallbackMutex *sync.RWMutex
 	TriggerNextSong              chan struct{}
@@ -174,7 +176,7 @@ func NewInstance(ctx context.Context) (*ShardInstance, error) {
 	if err != nil {
 		return nil, err
 	}
-	botConfig := getBotConfiguration()
+	botConfig := getBotConfigurationFromTOML()
 	db := connectDB(botConfig)
 	shardCtx, shardCtxCancel := context.WithCancel(ctx)
 	return &ShardInstance{
@@ -196,7 +198,7 @@ func NewInstance(ctx context.Context) (*ShardInstance, error) {
 	}, nil
 }
 
-func getBotConfiguration() *BotConfiguration {
+func getBotConfigurationFromTOML() *BotConfiguration {
 	newConfig := BotConfiguration{}
 	currentDirectory, err := os.Getwd()
 	if err != nil {
@@ -204,13 +206,27 @@ func getBotConfiguration() *BotConfiguration {
 	}
 	configFile, err := os.ReadFile(currentDirectory + "/config.toml")
 	if err != nil {
-		log.Fatal().Err(err).Msg("Error reading config file")
+		// Try to load from ENV
+		nc, errEnv := getBotConfigurationFromENV()
+		if errEnv != nil {
+			log.Fatal().Err(err).Msg("Unable to load configuration from environment variables or config file.")
+		}
+		return nc
 	}
 	_, err = toml.Decode(string(configFile), &newConfig)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Error decoding config file")
 	}
 	return &newConfig
+}
+
+func getBotConfigurationFromENV() (*BotConfiguration, error) {
+	newConfig := BotConfiguration{}
+	err := env.Parse(&newConfig)
+	if err != nil {
+		return nil, err
+	}
+	return &newConfig, nil
 }
 
 func (s *ShardInstance) gracefulShutdown() {

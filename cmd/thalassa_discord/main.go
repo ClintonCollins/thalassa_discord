@@ -3,15 +3,17 @@ package main
 import (
 	"context"
 	"log"
+	"net/http"
+	_ "net/http/pprof"
 
-	"thalassa_discord/pkg/api"
-	"thalassa_discord/pkg/commands/example"
-	"thalassa_discord/pkg/commands/general"
-	"thalassa_discord/pkg/commands/lookup"
-	"thalassa_discord/pkg/commands/moderation"
-	"thalassa_discord/pkg/commands/music"
-	"thalassa_discord/pkg/commands/random"
-	"thalassa_discord/pkg/discord"
+	"github.com/ClintonCollins/thalassa_discord/pkg/api"
+	"github.com/ClintonCollins/thalassa_discord/pkg/commands/example"
+	"github.com/ClintonCollins/thalassa_discord/pkg/commands/general"
+	"github.com/ClintonCollins/thalassa_discord/pkg/commands/lookup"
+	"github.com/ClintonCollins/thalassa_discord/pkg/commands/moderation"
+	"github.com/ClintonCollins/thalassa_discord/pkg/commands/music"
+	"github.com/ClintonCollins/thalassa_discord/pkg/commands/random"
+	"github.com/ClintonCollins/thalassa_discord/pkg/discord"
 )
 
 func main() {
@@ -37,6 +39,13 @@ func main() {
 		discordInstance.SongQueueUpdateCallbackMutex.Unlock()
 		apiInstance.Start(discordInstance.Ctx)
 	}
+
+	go func() {
+		err := http.ListenAndServe(":6060", nil)
+		if err != nil {
+			log.Println(err)
+		}
+	}()
 
 	discordInstance.Start()
 }

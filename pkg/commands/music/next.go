@@ -6,8 +6,8 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 
-	"thalassa_discord/models"
-	"thalassa_discord/pkg/discord"
+	"github.com/ClintonCollins/thalassa_discord/models"
+	"github.com/ClintonCollins/thalassa_discord/pkg/discord"
 )
 
 func next(instance *discord.ServerInstance, message *discordgo.Message, args []string) {

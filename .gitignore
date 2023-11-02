@@ -22,5 +22,4 @@
 /docker-compose.yml
 
 dist/
-
-dist/
+/.env

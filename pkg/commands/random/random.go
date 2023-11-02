@@ -1,7 +1,7 @@
 package random
 
 import (
-	"thalassa_discord/pkg/discord"
+	"github.com/ClintonCollins/thalassa_discord/pkg/discord"
 )
 
 func RegisterCommands(s *discord.ShardInstance) {

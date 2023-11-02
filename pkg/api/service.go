@@ -9,8 +9,9 @@ import (
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	thalassav1 "thalassa_discord/gen/go/thalassa/v1"
-	"thalassa_discord/models"
+	thalassav1 "github.com/ClintonCollins/thalassa_discord/gen/go/thalassa/v1"
+
+	"github.com/ClintonCollins/thalassa_discord/models"
 )
 
 func (inst *Instance) GetSongRequests(ctx context.Context, request *connect_go.Request[thalassav1.GetSongRequestsRequest]) (*connect_go.Response[thalassav1.GetSongRequestsResponse], error) {

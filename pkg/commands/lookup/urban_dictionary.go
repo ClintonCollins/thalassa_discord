@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	"thalassa_discord/pkg/discord"
+	"github.com/ClintonCollins/thalassa_discord/pkg/discord"
 
 	"github.com/bwmarrin/discordgo"
 )

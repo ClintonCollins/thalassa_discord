@@ -4,12 +4,13 @@ import (
 	"context"
 	"time"
 
-	"thalassa_discord/models"
+	"github.com/volatiletech/null/v8"
 
-	"thalassa_discord/pkg/discord"
+	"github.com/ClintonCollins/thalassa_discord/models"
+
+	"github.com/ClintonCollins/thalassa_discord/pkg/discord"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )

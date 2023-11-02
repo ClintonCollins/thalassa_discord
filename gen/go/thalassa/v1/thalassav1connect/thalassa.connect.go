@@ -7,10 +7,10 @@ package thalassav1connect
 import (
 	context "context"
 	errors "errors"
+	v1 "github.com/ClintonCollins/thalassa_discord/gen/go/thalassa/v1"
 	connect_go "github.com/bufbuild/connect-go"
 	http "net/http"
 	strings "strings"
-	v1 "thalassa_discord/gen/go/thalassa/v1"
 )
 
 // This is a compile-time assertion to ensure that this generated file and the connect package are

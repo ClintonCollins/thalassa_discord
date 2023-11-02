@@ -3,7 +3,7 @@ package thalassa.v1;
 
 import "google/protobuf/timestamp.proto";
 
-option go_package = "thalassa_discord/gen/go/thalassa/v1;thalassav1";
+option go_package = "github.com/ClintonCollins/thalassa_discord/gen/go/thalassa/v1;thalassav1";
 
 service APIService {
   rpc GetSongRequests(GetSongRequestsRequest) returns (GetSongRequestsResponse);

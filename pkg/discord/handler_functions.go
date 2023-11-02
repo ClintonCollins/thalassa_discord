@@ -14,7 +14,7 @@ import (
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 
-	"thalassa_discord/models"
+	"github.com/ClintonCollins/thalassa_discord/models"
 )
 
 func (*guildMemberAdd) checkNewUserForMute(serverInstance *ServerInstance, guildMemberAdd *discordgo.GuildMemberAdd) {
@@ -54,6 +54,15 @@ func (*guildCreate) startMusicBot(serverInstance *ServerInstance, guildCreate *d
 	//musicVoiceChannelID := serverInstance.Configuration.MusicVoiceChannelID.String
 	//musicTextChannelID := serverInstance.Configuration.MusicTextChannelID.String
 	musicEnabled := serverInstance.Configuration.MusicEnabled
+	songQueueStarted := serverInstance.SongQueueStarted
+	songPlaying := serverInstance.MusicData.SongPlaying
+	vc, ok := serverInstance.Session.VoiceConnections[serverInstance.GuildID]
+	if ok {
+		errDC := vc.Disconnect()
+		if errDC != nil {
+			serverInstance.Log.Error().Err(errDC).Msg("Unable to disconnect from voice channel.")
+		}
+	}
 	serverInstance.RUnlock()
 	if musicEnabled {
 		log.Debug().Msg("Starting music bot.")
@@ -62,17 +71,21 @@ func (*guildCreate) startMusicBot(serverInstance *ServerInstance, guildCreate *d
 			serverInstance.Log.Error().Err(errConnectVoice).Msg("Unable to connect to voice.")
 			return
 		}
-		log.Debug().Msg("Starting song queue.")
-		go func() {
-			errSongQueue := serverInstance.handleSongQueue()
-			if errSongQueue != nil {
-				serverInstance.Log.Error().Err(errSongQueue).Msg("Unable to handle song queue.")
-				return
-			}
-		}()
+		if !songQueueStarted {
+			log.Debug().Msg("Starting song queue.")
+			go func() {
+				errSongQueue := serverInstance.handleSongQueue()
+				if errSongQueue != nil {
+					serverInstance.Log.Error().Err(errSongQueue).Msg("Unable to handle song queue.")
+					return
+				}
+			}()
+		}
 		// Trigger the queue to immediately start playing if there's songs in the queue.
-		serverInstance.TriggerNextSong <- struct{}{}
-		log.Debug().Msg("Started music bot.")
+		if !songPlaying {
+			serverInstance.TriggerNextSong <- struct{}{}
+			log.Debug().Msg("Started music bot.")
+		}
 	}
 	return
 }

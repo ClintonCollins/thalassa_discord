@@ -17,7 +17,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"thalassa_discord/models"
+	"github.com/ClintonCollins/thalassa_discord/models"
 )
 
 type SongQueueEventType int

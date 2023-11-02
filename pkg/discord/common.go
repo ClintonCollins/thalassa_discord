@@ -12,8 +12,8 @@ import (
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 
-	"thalassa_discord/models"
-	"thalassa_discord/pkg/music"
+	"github.com/ClintonCollins/thalassa_discord/models"
+	"github.com/ClintonCollins/thalassa_discord/pkg/music"
 )
 
 func (serverInstance *ServerInstance) MuteUser(userID string) error {
@@ -53,27 +53,44 @@ func (serverInstance *ServerInstance) SendSongQueueEvent(songRequestEvent music.
 	}
 }
 
-func (serverInstance *ServerInstance) loopNextSongs(ctx context.Context, musicTextChannelID string) error {
-	for {
-		select {
-		case <-ctx.Done():
-			return nil
-		default:
-			nextSongRequest, err := serverInstance.getNextSongInQueue()
-			if err != nil || nextSongRequest == nil {
-				if err != nil && !errors.Is(err, sql.ErrNoRows) {
-					serverInstance.Log.Error().Err(err).Msg("Unable to get next song in queue")
-				}
-				return nil
-			}
-			serverInstance.Log.Debug().Str("song", nextSongRequest.R.Song.SongName).Msg("Playing next song")
-			errPlaySong := serverInstance.handleSongRequest(musicTextChannelID, nextSongRequest)
-			if errPlaySong != nil {
-				serverInstance.Log.Error().Err(errPlaySong).Msg("Unable to play next song")
-				return err
-			}
+func (serverInstance *ServerInstance) toggleSongPlaying(songPlaying bool) {
+	serverInstance.MusicData.Lock()
+	serverInstance.MusicData.SongPlaying = songPlaying
+	serverInstance.MusicData.Unlock()
+}
+
+func (serverInstance *ServerInstance) playNextSong(ctx context.Context, musicTextChannelID string) error {
+	serverInstance.toggleSongPlaying(true)
+	defer serverInstance.toggleSongPlaying(false)
+
+	nextSongRequest, err := serverInstance.getNextSongInQueue()
+	if err != nil || nextSongRequest == nil {
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
+			serverInstance.Log.Error().Err(err).Msg("Unable to get next song in queue")
 		}
+		return nil
 	}
+	serverInstance.Log.Debug().Str("song", nextSongRequest.R.Song.SongName).Msg("Playing next song")
+	errPlaySong := serverInstance.handleSongRequest(musicTextChannelID, nextSongRequest)
+	if errPlaySong != nil {
+		serverInstance.Log.Error().Err(errPlaySong).Msg("Unable to play next song")
+		return err
+	}
+	defer func() {
+		count, errCount := models.SongRequests(
+			qm.Where("guild_id = ?", serverInstance.GuildID),
+			qm.Where("played = false"),
+		).Count(ctx, serverInstance.Db)
+		if errCount != nil {
+			serverInstance.Log.Error().Err(errCount).Msg("Unable to get song request count")
+			return
+		}
+		if count <= 0 {
+			return
+		}
+		serverInstance.TriggerNextSong <- struct{}{}
+	}()
+	return nil
 }
 
 func drainSongRequestTriggers(serverInstance *ServerInstance) {
@@ -91,6 +108,18 @@ Drain:
 }
 
 func (serverInstance *ServerInstance) handleSongQueue() error {
+	serverInstance.Lock()
+	if serverInstance.SongQueueStarted {
+		serverInstance.Unlock()
+		return nil
+	}
+	serverInstance.SongQueueStarted = true
+	serverInstance.Unlock()
+	defer func() {
+		serverInstance.Lock()
+		serverInstance.SongQueueStarted = false
+		serverInstance.Unlock()
+	}()
 	ticker := time.NewTicker(time.Second * 30)
 	defer ticker.Stop()
 	for {
@@ -101,11 +130,21 @@ func (serverInstance *ServerInstance) handleSongQueue() error {
 		case <-serverInstance.Ctx.Done():
 			return nil
 		case <-ticker.C:
-			_ = serverInstance.loopNextSongs(serverInstance.Ctx, musicTextChannelID)
+			serverInstance.MusicData.RLock()
+			songPlaying := serverInstance.MusicData.SongPlaying
+			serverInstance.MusicData.RUnlock()
+			if !songPlaying {
+				_ = serverInstance.playNextSong(serverInstance.Ctx, musicTextChannelID)
+			}
 		case <-serverInstance.TriggerNextSong:
+			serverInstance.MusicData.RLock()
+			songPlaying := serverInstance.MusicData.SongPlaying
+			serverInstance.MusicData.RUnlock()
 			// Drain other song request triggers, since we loop through all requests.
 			drainSongRequestTriggers(serverInstance)
-			_ = serverInstance.loopNextSongs(serverInstance.Ctx, musicTextChannelID)
+			if !songPlaying {
+				_ = serverInstance.playNextSong(serverInstance.Ctx, musicTextChannelID)
+			}
 		}
 	}
 }
@@ -170,7 +209,6 @@ func (serverInstance *ServerInstance) handleSongRequest(musicChatChannelID strin
 		}
 		serverInstance.MusicData.SongDurationSeconds = duration
 		serverInstance.MusicData.SongStarted = time.Now().UTC()
-		serverInstance.MusicData.SongPlaying = true
 		serverInstance.MusicData.Ctx = ctx
 		serverInstance.MusicData.CtxCancel = ctxCancel
 		serverInstance.MusicData.CurrentSongRequest = songRequest
@@ -188,7 +226,6 @@ func (serverInstance *ServerInstance) handleSongRequest(musicChatChannelID strin
 		serverInstance.Log.Info().Msgf("Playing song: %s", songRequest.SongName)
 		music.StreamSong(ctx, songRequest.R.Song.URL, serverInstance.Log, voiceConnection, serverInstance.Configuration.MusicVolume)
 		serverInstance.MusicData.Lock()
-		serverInstance.MusicData.SongPlaying = false
 
 		// Send the song finished event to the song queue channel.
 		songQueueEvent := music.SongQueueEvent{Song: &s, SongRequest: &sr, Type: music.SongFinished}

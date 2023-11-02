@@ -169,7 +169,7 @@ type SongRequestedFormats struct {
 	Format             string                `json:"format"`
 	FormatID           string                `json:"format_id"`
 	FormatNote         string                `json:"format_note"`
-	Fps                int                   `json:"fps"`
+	Fps                float64               `json:"fps"`
 	HTTPHeaders        SongHTTPHeaders       `json:"http_headers"`
 	HasDrm             bool                  `json:"has_drm"`
 	Height             int                   `json:"height"`

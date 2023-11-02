@@ -3,8 +3,8 @@ package random
 import (
 	"encoding/json"
 
+	"github.com/ClintonCollins/thalassa_discord/pkg/discord"
 	"github.com/bwmarrin/discordgo"
-	"thalassa_discord/pkg/discord"
 )
 
 func getRandomFoxPicture(instance *discord.ServerInstance, message *discordgo.Message, args []string) {

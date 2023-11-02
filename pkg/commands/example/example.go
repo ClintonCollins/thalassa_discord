@@ -1,7 +1,7 @@
 package example
 
 import (
-	"thalassa_discord/pkg/discord"
+	"github.com/ClintonCollins/thalassa_discord/pkg/discord"
 
 	"github.com/bwmarrin/discordgo"
 )
